@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Routes, Route, Navigate, Router } from "react-router-dom";
 import LoginForm from "./components/auth/LoginForm";
-import RegisterForm from "./components/auth/Register";
+import RegisterForm from "./components/auth/RegisterForm";
 import Home from "./pages/Home";
 import ProtectedRoute from "./components/ProtectedRoute";
 

@@ -11,9 +11,9 @@ const register = async (req, res) => {
     }
 
     const user = await User.create({ username, email, password });
+    //sending user object
     res.status(200).json({
-      _id: user._id,
-      username: user.username,
+      user: { _id: user._id, username: user.username, email: user.email },
       token: generateToken(user._id),
     });
   } catch (err) {
@@ -32,10 +32,7 @@ const login = async (req, res) => {
       return res.status(401).json({ message: "Invalid email or password" });
     }
     res.status(200).json({
-      _id: user._id,
-      username: user.username,
-      email: user.email,
-      role: user.role,
+      user: { _id: user._id, username: user.username, email: user.email },
       token: generateToken(user._id),
     });
   } catch (err) {
@@ -46,7 +43,7 @@ const login = async (req, res) => {
 const profile = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
-    res.json(user);
+    res.status(200).json(user);
   } catch (error) {
     res.status(400).json({ message: error.message });
   }

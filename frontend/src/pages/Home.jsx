@@ -1,56 +1,62 @@
 import React, { useState, useEffect } from "react";
-import { useAuth } from "../context/AuthContext";
 import { postService } from "../services/postService";
+import CreatePost from "../components/CreatePost";
+import { useAuth } from "../context/AuthContext";
 
 const Home = () => {
-  const { user, loading: userLoading } = useAuth(); // AuthContext
-  const [posts, setPosts] = useState([]); // API posts
-  const [loading, setLoading] = useState(true); // Posts loading
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
+  const { user } = useAuth();
   useEffect(() => {
     fetchPosts();
   }, []);
 
   const fetchPosts = async () => {
     try {
-      const data = await postService.getPosts(); // API returns array
-      setPosts(data || []); // defensive: default to empty array
-    } catch (err) {
+      const data = await postService.getPosts();
+      setPosts(Array.isArray(data) ? data : []);
+    } catch {
       setError("Failed to load posts");
     } finally {
       setLoading(false);
     }
   };
 
-  // Show loader until both user and posts are ready
-  if (userLoading || loading) return <div>Loading...</div>;
+  const handleDelete = async (id) => {
+    try {
+      await postService.deletePost(id);
+      setPosts(posts.filter((post) => post._id !== id));
+    } catch {
+      alert("Failed to delete post");
+    }
+  };
+
+  if (loading) return <div>Loading posts...</div>;
   if (error) return <div>{error}</div>;
 
   return (
     <div>
-      <h1>Welcome {user?.username || "Guest"}</h1>
+      <h1>Latest Posts</h1>
+      {user && (
+        <CreatePost onPostCreated={(post) => setPosts([post, ...posts])} />
+      )}
 
-      <h2>Latest Posts</h2>
       {posts.length === 0 ? (
         <div>No posts yet. Be the first to create one!</div>
       ) : (
         <ul>
           {posts.map((post) => (
-            <li key={post._id}>{post.title}</li>
+            <li key={post._id}>
+              <strong>{post.title}</strong>
+              <p>{post.content}</p>
+              <p>By: {post.author?.username || "Unknown"}</p>
+              {user && user._id === post.author?._id && (
+                <button onClick={() => handleDelete(post._id)}>Delete</button>
+              )}
+            </li>
           ))}
         </ul>
-      )}
-
-      <h2>Your Posts</h2>
-      {user?.posts?.length > 0 ? ( // optional chaining to prevent crash
-        <ul>
-          {user.posts.map((post) => (
-            <li key={post._id}>{post.title}</li>
-          ))}
-        </ul>
-      ) : (
-        <div>You have no posts yet.</div>
       )}
     </div>
   );

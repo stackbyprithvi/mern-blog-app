@@ -14,12 +14,11 @@ const RegisterForm = () => {
     setError("");
     setLoading(true);
     const res = await register(username, email, password);
-    if (res.success) {
-      navigate("/", { replace: true });
-    } else {
-      setError("Invalid credentials");
-    }
     setLoading(false);
+
+    if (res.success) {
+      navigate("/");
+    }
   };
   return (
     <div className="">

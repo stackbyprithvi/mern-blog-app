@@ -15,7 +15,7 @@ const LoginForm = () => {
     setLoading(true);
     const res = await login(email, password);
     if (res.success) {
-      navigate("/", { replace: true });
+      navigate("/"); //, { replace: true }
     } else {
       setError("Invalid credentials");
     }
