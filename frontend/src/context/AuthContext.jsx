@@ -21,7 +21,7 @@ export const AuthProvider = ({ children }) => {
     } catch (err) {
       const message = err.response?.data?.message || "Login failed";
       setError(message);
-      return { success: false };
+      return { success: false, message };
     }
   };
 
@@ -42,7 +42,7 @@ export const AuthProvider = ({ children }) => {
     } catch (err) {
       const message = err.response?.data?.message || "Registration failed";
       setError(message);
-      return { success: false };
+      return { success: false, message };
     }
   };
 
@@ -70,8 +70,24 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, []);
 
+  //LOGOUT
+  const logout = async () => {
+    try {
+      setError(null);
+      localStorage.removeItem("token");
+      setUser(null);
+      return { success: true };
+    } catch (err) {
+      const message = err.response?.data?.message || "Logout failed";
+      setError(message);
+      return { success: false };
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, error, login, register }}>
+    <AuthContext.Provider
+      value={{ user, loading, error, login, register, logout }}
+    >
       {children}
     </AuthContext.Provider>
   );

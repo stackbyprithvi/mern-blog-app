@@ -8,6 +8,62 @@ const getPosts = async (req, res, next) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+const getUserPosts = async (req, res) => {
+  try {
+    const posts = await Post.find({ author: req.params.userId }).populate(
+      "author",
+      "username email"
+    );
+    res.status(200).json(posts);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+};
+
+const likePost = async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+    if (!post) {
+      res.status(400).json({ message: "Post not found" });
+    }
+    const userId = req.user._id;
+    // ✅ FIX: Handle corrupted likes data
+    if (
+      !post.likes ||
+      !Array.isArray(post.likes) ||
+      typeof post.likes === "string"
+    ) {
+      console.log("⚠️ Corrupted likes data detected, resetting...");
+      post.likes = [];
+    }
+
+    // Check if user already liked the post
+    const alreadyLiked = post.likes.some(
+      (id) => id.toString() === userId.toString()
+    );
+
+    if (alreadyLiked) {
+      // Unlike
+      post.likes = post.likes.filter(
+        (id) => id.toString() !== userId.toString()
+      );
+    } else {
+      // Like
+      post.likes.push(userId);
+    }
+    await post.save();
+    const updatedPost = await Post.findById(post._id).populate(
+      "author",
+      "username"
+    );
+    res.status(200).json(updatedPost);
+  } catch (err) {
+    console.error("Like post error:", err);
+    res.status(500).json({ message: err.message });
+  }
+};
+
 const createPosts = async (req, res) => {
   try {
     const { title, content } = req.body;
@@ -45,4 +101,4 @@ const deletePosts = async (req, res) => {
   }
 };
 
-module.exports = { getPosts, createPosts, deletePosts };
+module.exports = { getPosts, createPosts, deletePosts, getUserPosts, likePost };
