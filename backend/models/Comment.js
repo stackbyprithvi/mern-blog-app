@@ -3,6 +3,10 @@ const Post = require("./Post");
 const User = require("./User");
 const commentSchema = new mongoose.Schema(
   {
+    content: {
+      type: String,
+      required: true,
+    },
     post: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Post",
@@ -11,11 +15,12 @@ const commentSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
-    content: {
-      type: String,
+    createdAt: {
+      type: Date,
+      default: Date.now,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const Comment = mongoose.model("Comment", commentSchema);

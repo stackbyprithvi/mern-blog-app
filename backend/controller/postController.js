@@ -1,4 +1,6 @@
 const Post = require("../models/Post");
+const User = require("../models/User");
+const Comment = require("../models/Comment");
 
 const getPosts = async (req, res, next) => {
   try {
@@ -13,7 +15,7 @@ const getUserPosts = async (req, res) => {
   try {
     const posts = await Post.find({ author: req.params.userId }).populate(
       "author",
-      "username email"
+      "username email",
     );
     res.status(200).json(posts);
   } catch (err) {
@@ -40,13 +42,13 @@ const likePost = async (req, res) => {
 
     // Check if user already liked the post
     const alreadyLiked = post.likes.some(
-      (id) => id.toString() === userId.toString()
+      (id) => id.toString() === userId.toString(),
     );
 
     if (alreadyLiked) {
       // Unlike
       post.likes = post.likes.filter(
-        (id) => id.toString() !== userId.toString()
+        (id) => id.toString() !== userId.toString(),
       );
     } else {
       // Like
@@ -55,7 +57,7 @@ const likePost = async (req, res) => {
     await post.save();
     const updatedPost = await Post.findById(post._id).populate(
       "author",
-      "username"
+      "username",
     );
     res.status(200).json(updatedPost);
   } catch (err) {
@@ -75,7 +77,7 @@ const createPosts = async (req, res) => {
     const populatedPost = await post.populate("author", "username");
     res.status(201).json(populatedPost);
   } catch (err) {
-    res.status(400).json({ message: err.message });
+    res.status(500).json({ message: err.message });
   }
 };
 
@@ -101,4 +103,31 @@ const deletePosts = async (req, res) => {
   }
 };
 
-module.exports = { getPosts, createPosts, deletePosts, getUserPosts, likePost };
+const updatePost = async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+    if (!post) {
+      return res.status(404).json({ message: "Page not found" });
+    }
+    if (post.author.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+    const { title, content } = req.body;
+    post.title = title;
+    post.content = content;
+    await post.save();
+    const updatedPost = await post.populate("author", "username");
+    res.status(200).json(updatedPost);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+module.exports = {
+  getPosts,
+  createPosts,
+  deletePosts,
+  getUserPosts,
+  likePost,
+  updatePost,
+};

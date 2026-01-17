@@ -16,7 +16,7 @@ export const postService = {
     const res = await API.post(
       "/posts",
       { title, content },
-      { headers: { Authorization: `Bearer ${token}` } }
+      { headers: { Authorization: `Bearer ${token}` } },
     );
     return res.data;
   },
@@ -26,6 +26,15 @@ export const postService = {
     const res = await API.delete(`/posts/${id}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
+    return res.data;
+  },
+  updatePost: async (id, title, content) => {
+    const token = localStorage.getItem("token");
+    const res = await API.put(
+      `/posts/${id}`,
+      { title, content },
+      { headers: { Authorization: `Bearer ${token}` } },
+    );
     return res.data;
   },
 

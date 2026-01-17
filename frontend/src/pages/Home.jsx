@@ -2,11 +2,14 @@ import React, { useState, useEffect } from "react";
 import { postService } from "../services/postService";
 import { useAuth } from "../context/AuthContext";
 import CreatePost from "../components/CreatePost";
+import CommentSection from "../components/CommentSection";
+import EditPost from "../components/EditPost";
 
 const Home = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [likingPostId, setLikingPostId] = useState(null);
+  const [editingPostId, setEditingPostId] = useState(null);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -23,9 +26,15 @@ const Home = () => {
     fetchPosts();
   }, []);
 
-  //CALLBACK POST CREATE
   const handlePostCreated = (newPost) => {
     setPosts([newPost, ...posts]);
+  };
+
+  const handlePostUpdated = (updatedPost) => {
+    setPosts(
+      posts.map((post) => (post._id === updatedPost._id ? updatedPost : post)),
+    );
+    setEditingPostId(null);
   };
 
   const handleDelete = async (postId) => {
@@ -66,7 +75,6 @@ const Home = () => {
 
   return (
     <div className="max-w-3xl mx-auto mt-10 p-6">
-      {/* Create Post Section - Only show if logged in */}
       {user && (
         <div className="border rounded p-6 mb-6 bg-white shadow-sm">
           <h2 className="text-xl font-semibold mb-4">Create a Post</h2>
@@ -74,7 +82,6 @@ const Home = () => {
         </div>
       )}
 
-      {/* Posts Feed */}
       <h1 className="text-3xl font-bold mb-6">Recent Posts</h1>
 
       {posts.length === 0 ? (
@@ -82,60 +89,83 @@ const Home = () => {
       ) : (
         <div className="space-y-4">
           {posts.map((post) => {
-            const isLiked = user && post.likes?.includes(user._id);
+            const isLiked =
+              user &&
+              post.likes?.some(
+                (likeId) => likeId.toString() === user._id.toString(),
+              );
             const isLiking = likingPostId === post._id;
+            const isEditing = editingPostId === post._id;
 
             return (
               <div
                 key={post._id}
                 className="border rounded p-6 bg-white shadow-sm"
               >
-                <div className="flex justify-between items-start mb-3">
-                  <div className="flex-1">
-                    <h2 className="text-2xl font-semibold mb-2">
-                      {post.title}
-                    </h2>
-                    <p className="text-sm text-gray-600">
-                      By {post.author?.username || "Unknown"} •{" "}
-                      {new Date(post.createdAt).toLocaleDateString()}
+                {/* ✅ Show edit form OR post content */}
+                {isEditing ? (
+                  <EditPost
+                    post={post}
+                    onPostUpdated={handlePostUpdated}
+                    onCancel={() => setEditingPostId(null)}
+                  />
+                ) : (
+                  <>
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="flex-1">
+                        <h2 className="text-2xl font-semibold mb-2">
+                          {post.title}
+                        </h2>
+                        <p className="text-sm text-gray-600">
+                          By {post.author?.username || "Unknown"} •{" "}
+                          {new Date(post.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+
+                    <p className="text-gray-700 mb-4 whitespace-pre-wrap">
+                      {post.content}
                     </p>
-                  </div>
-                </div>
 
-                <p className="text-gray-700 mb-4 whitespace-pre-wrap">
-                  {post.content}
-                </p>
-
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => handleLike(post._id)}
-                    disabled={!user || isLiking}
-                    className={`px-4 py-2 rounded text-sm transition ${
-                      isLiked
-                        ? "bg-blue-600 text-white"
-                        : "bg-blue-500 text-white hover:bg-blue-600"
-                    } ${
-                      !user || isLiking ? "opacity-50 cursor-not-allowed" : ""
-                    }`}
-                  >
-                    {isLiking ? "..." : isLiked ? "👍 Liked" : "👍 Like"} (
-                    {post.likes?.length || 0})
-                  </button>
-
-                  {user && user._id === post.author?._id && (
-                    <>
-                      <button className="px-4 py-2 bg-gray-500 text-white rounded text-sm hover:bg-gray-600 transition">
-                        Edit
-                      </button>
+                    <div className="flex gap-3">
                       <button
-                        onClick={() => handleDelete(post._id)}
-                        className="px-4 py-2 bg-red-500 text-white rounded text-sm hover:bg-red-600 transition"
+                        onClick={() => handleLike(post._id)}
+                        disabled={!user || isLiking}
+                        className={`px-4 py-2 rounded text-sm transition ${
+                          isLiked
+                            ? "bg-blue-600 text-white"
+                            : "bg-blue-500 text-white hover:bg-blue-600"
+                        } ${
+                          !user || isLiking
+                            ? "opacity-50 cursor-not-allowed"
+                            : ""
+                        }`}
                       >
-                        Delete
+                        {isLiking ? "..." : isLiked ? "👍 Liked" : "👍 Like"} (
+                        {post.likes?.length || 0})
                       </button>
-                    </>
-                  )}
-                </div>
+
+                      {user && user._id === post.author?._id && (
+                        <>
+                          <button
+                            onClick={() => setEditingPostId(post._id)}
+                            className="px-4 py-2 bg-gray-500 text-white rounded text-sm hover:bg-gray-600 transition"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDelete(post._id)}
+                            className="px-4 py-2 bg-red-500 text-white rounded text-sm hover:bg-red-600 transition"
+                          >
+                            Delete
+                          </button>
+                        </>
+                      )}
+                    </div>
+
+                    <CommentSection postId={post._id} />
+                  </>
+                )}
               </div>
             );
           })}
