@@ -10,7 +10,6 @@ export const ThemeProvider = ({ children }) => {
 
   // Update localStorage and document class when theme changes
   useEffect(() => {
-    console.log("Theme changed in NavBar:", theme);
     const root = document.documentElement;
 
     if (theme === "dark") {
