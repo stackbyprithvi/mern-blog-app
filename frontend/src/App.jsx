@@ -6,17 +6,14 @@ import Home from "./pages/Home";
 import Profile from "./pages/Profile";
 import ProtectedRoute from "./components/ProtectedRoute";
 import NavBar from "./components/NavBar";
-
+import "./index.css";
 function App() {
   return (
-    <>
+    <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors">
       <NavBar />
       <Routes>
-        {/* PUBLIC ROUTES */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-
-        {/* PROTECTED ROUTES */}
         <Route
           path="/"
           element={
@@ -33,17 +30,18 @@ function App() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="*"
           element={
-            <div>
-              <h1>404 - Page Not Found</h1>
+            <div className="text-center mt-10">
+              <h1 className="text-gray-800 dark:text-white">
+                404 - Page Not Found
+              </h1>
             </div>
           }
         />
       </Routes>
-    </>
+    </div>
   );
 }
 

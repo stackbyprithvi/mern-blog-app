@@ -18,7 +18,7 @@ const Home = () => {
         const data = await postService.getPosts();
         setPosts(data);
       } catch (err) {
-        console.error("Failed to fetch posts:", err);
+        console.error(err);
       } finally {
         setLoading(false);
       }
@@ -26,83 +26,64 @@ const Home = () => {
     fetchPosts();
   }, []);
 
-  const handlePostCreated = (newPost) => {
-    setPosts([newPost, ...posts]);
-  };
-
-  const handlePostUpdated = (updatedPost) => {
-    setPosts(
-      posts.map((post) => (post._id === updatedPost._id ? updatedPost : post)),
-    );
-    setEditingPostId(null);
-  };
-
+  const handlePostCreated = (newPost) => setPosts([newPost, ...posts]);
+  const handlePostUpdated = (updatedPost) =>
+    setPosts(posts.map((p) => (p._id === updatedPost._id ? updatedPost : p)));
   const handleDelete = async (postId) => {
-    if (!window.confirm("Are you sure you want to delete this post?")) return;
-
-    try {
-      await postService.deletePost(postId);
-      setPosts(posts.filter((post) => post._id !== postId));
-    } catch (err) {
-      console.error("Failed to delete post:", err);
-      alert("Failed to delete post");
-    }
+    if (!window.confirm("Are you sure?")) return;
+    await postService.deletePost(postId);
+    setPosts(posts.filter((p) => p._id !== postId));
   };
 
   const handleLike = async (postId) => {
-    if (!user) {
-      alert("Please login to like posts");
-      return;
-    }
-
-    if (likingPostId === postId) {
-      return;
-    }
+    if (!user) return alert("Login first!");
+    if (likingPostId === postId) return;
     setLikingPostId(postId);
 
     try {
       const updatedPost = await postService.likePost(postId);
-      setPosts(posts.map((post) => (post._id === postId ? updatedPost : post)));
-    } catch (err) {
-      console.error("Failed to like post:", err);
+      setPosts(posts.map((p) => (p._id === postId ? updatedPost : p)));
+    } catch {
       alert("Failed to like post");
     } finally {
       setLikingPostId(null);
     }
   };
 
-  if (loading) return <div className="text-center mt-10">Loading...</div>;
+  if (loading)
+    return (
+      <div className="mt-10 text-center text-gray-800 dark:text-gray-100">
+        Loading...
+      </div>
+    );
 
   return (
-    <div className="max-w-3xl mx-auto mt-10 p-6">
+    <div className="max-w-3xl mx-auto mt-10 px-4 text-gray-800 dark:text-gray-100">
       {user && (
-        <div className="border rounded p-6 mb-6 bg-white shadow-sm">
-          <h2 className="text-xl font-semibold mb-4">Create a Post</h2>
+        <div className="mb-6 rounded-xl p-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm">
+          <h2 className="mb-4 text-xl font-semibold">Create a Post</h2>
           <CreatePost onPostCreated={handlePostCreated} />
         </div>
       )}
 
-      <h1 className="text-3xl font-bold mb-6">Recent Posts</h1>
+      <h1 className="mb-6 text-3xl font-bold">Recent Posts</h1>
 
       {posts.length === 0 ? (
-        <p className="text-gray-500">No posts yet. Be the first to post!</p>
+        <p className="text-gray-500 dark:text-gray-400">No posts yet.</p>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-5">
           {posts.map((post) => {
             const isLiked =
               user &&
-              post.likes?.some(
-                (likeId) => likeId.toString() === user._id.toString(),
-              );
+              post.likes?.some((id) => id.toString() === user._id.toString());
             const isLiking = likingPostId === post._id;
             const isEditing = editingPostId === post._id;
 
             return (
               <div
                 key={post._id}
-                className="border rounded p-6 bg-white shadow-sm"
+                className="rounded-xl p-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm"
               >
-                {/* ✅ Show edit form OR post content */}
                 {isEditing ? (
                   <EditPost
                     post={post}
@@ -111,19 +92,14 @@ const Home = () => {
                   />
                 ) : (
                   <>
-                    <div className="flex justify-between items-start mb-3">
-                      <div className="flex-1">
-                        <h2 className="text-2xl font-semibold mb-2">
-                          {post.title}
-                        </h2>
-                        <p className="text-sm text-gray-600">
-                          By {post.author?.username || "Unknown"} •{" "}
-                          {new Date(post.createdAt).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-
-                    <p className="text-gray-700 mb-4 whitespace-pre-wrap">
+                    <h2 className="mb-1 text-2xl font-semibold">
+                      {post.title}
+                    </h2>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                      By {post.author?.username || "Unknown"} •{" "}
+                      {new Date(post.createdAt).toLocaleDateString()}
+                    </p>
+                    <p className="mb-4 whitespace-pre-wrap text-gray-700 dark:text-gray-300">
                       {post.content}
                     </p>
 
@@ -131,15 +107,11 @@ const Home = () => {
                       <button
                         onClick={() => handleLike(post._id)}
                         disabled={!user || isLiking}
-                        className={`px-4 py-2 rounded text-sm transition ${
+                        className={`px-4 py-2 text-sm rounded-md text-white transition ${
                           isLiked
-                            ? "bg-blue-600 text-white"
-                            : "bg-blue-500 text-white hover:bg-blue-600"
-                        } ${
-                          !user || isLiking
-                            ? "opacity-50 cursor-not-allowed"
-                            : ""
-                        }`}
+                            ? "bg-blue-600"
+                            : "bg-blue-500 hover:bg-blue-600"
+                        } ${!user || isLiking ? "opacity-50 cursor-not-allowed" : ""}`}
                       >
                         {isLiking ? "..." : isLiked ? "👍 Liked" : "👍 Like"} (
                         {post.likes?.length || 0})
@@ -149,13 +121,13 @@ const Home = () => {
                         <>
                           <button
                             onClick={() => setEditingPostId(post._id)}
-                            className="px-4 py-2 bg-gray-500 text-white rounded text-sm hover:bg-gray-600 transition"
+                            className="px-4 py-2 text-sm rounded-md bg-gray-500 text-white hover:bg-gray-600"
                           >
                             Edit
                           </button>
                           <button
                             onClick={() => handleDelete(post._id)}
-                            className="px-4 py-2 bg-red-500 text-white rounded text-sm hover:bg-red-600 transition"
+                            className="px-4 py-2 text-sm rounded-md bg-red-500 text-white hover:bg-red-600"
                           >
                             Delete
                           </button>

@@ -9,7 +9,6 @@ const CommentSection = ({ postId }) => {
   const [submitting, setSubmitting] = useState(false);
   const { user } = useAuth();
 
-  // Fetch comments when component mounts
   useEffect(() => {
     const fetchComments = async () => {
       try {
@@ -24,7 +23,6 @@ const CommentSection = ({ postId }) => {
     fetchComments();
   }, [postId]);
 
-  // Handle comment submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!newComment.trim()) return;
@@ -42,7 +40,6 @@ const CommentSection = ({ postId }) => {
     }
   };
 
-  // Handle comment deletion
   const handleDelete = async (commentId) => {
     if (!window.confirm("Delete this comment?")) return;
 
@@ -56,19 +53,22 @@ const CommentSection = ({ postId }) => {
   };
 
   return (
-    <div className="mt-6 border-t pt-4">
-      <h3 className="text-lg font-semibold mb-4">
+    <div className="mt-6 border-t dark:border-gray-700 pt-4">
+      <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white">
         Comments ({comments.length})
       </h3>
 
-      {/* Comment Form */}
       {user ? (
         <form onSubmit={handleSubmit} className="mb-4">
           <textarea
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
             placeholder="Write a comment..."
-            className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border dark:border-gray-600 rounded 
+              bg-white dark:bg-gray-700 
+              text-gray-900 dark:text-white
+              placeholder-gray-500 dark:placeholder-gray-400
+              focus:outline-none focus:ring-2 focus:ring-blue-500"
             rows="3"
             required
           />
@@ -81,37 +81,45 @@ const CommentSection = ({ postId }) => {
           </button>
         </form>
       ) : (
-        <p className="text-gray-500 mb-4">Please login to comment</p>
+        <p className="text-gray-500 dark:text-gray-400 mb-4">
+          Please login to comment
+        </p>
       )}
 
-      {/* Comments List */}
       {loading ? (
-        <p className="text-gray-500">Loading comments...</p>
+        <p className="text-gray-500 dark:text-gray-400">Loading comments...</p>
       ) : comments.length === 0 ? (
-        <p className="text-gray-500">No comments yet. Be the first!</p>
+        <p className="text-gray-500 dark:text-gray-400">
+          No comments yet. Be the first!
+        </p>
       ) : (
         <div className="space-y-3">
           {comments.map((comment) => (
-            <div key={comment._id} className="bg-gray-50 rounded p-3">
+            <div
+              key={comment._id}
+              className="bg-gray-50 dark:bg-gray-700 rounded p-3"
+            >
               <div className="flex justify-between items-start mb-2">
                 <div>
-                  <span className="font-semibold text-sm">
+                  <span className="font-semibold text-sm text-gray-800 dark:text-white">
                     {comment.author?.username || "Unknown"}
                   </span>
-                  <span className="text-xs text-gray-500 ml-2">
+                  <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">
                     {new Date(comment.createdAt).toLocaleDateString()}
                   </span>
                 </div>
                 {user && user._id === comment.author?._id && (
                   <button
                     onClick={() => handleDelete(comment._id)}
-                    className="text-xs text-red-500 hover:text-red-700"
+                    className="text-xs text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
                   >
                     Delete
                   </button>
                 )}
               </div>
-              <p className="text-gray-700 text-sm">{comment.content}</p>
+              <p className="text-gray-700 dark:text-gray-300 text-sm">
+                {comment.content}
+              </p>
             </div>
           ))}
         </div>
